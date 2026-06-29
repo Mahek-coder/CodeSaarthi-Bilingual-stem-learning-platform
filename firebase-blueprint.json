@@ -1,0 +1,61 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Bilingual learner or educator account details",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "teacher"] },
+        "preferredLang": { "type": "string", "enum": ["en", "hi", "mr", "te"] },
+        "grade": { "type": "string" },
+        "xpPoints": { "type": "integer" },
+        "dailyStreak": { "type": "integer" },
+        "completedLessons": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "fullName", "email", "role", "preferredLang", "xpPoints", "dailyStreak", "completedLessons"]
+    },
+    "ChatMessage": {
+      "title": "Chat Message",
+      "description": "Interactive question or tutoring message with AI Saarthi",
+      "type": "object",
+      "properties": {
+        "sender": { "type": "string", "enum": ["user", "ai"] },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sender", "text", "timestamp"]
+    },
+    "QuizAttempt": {
+      "title": "Quiz Attempt",
+      "description": "Mock exam and quiz scoring detail",
+      "type": "object",
+      "properties": {
+        "quizId": { "type": "string" },
+        "quizTitle": { "type": "string" },
+        "score": { "type": "integer" },
+        "totalQuestions": { "type": "integer" },
+        "completedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["quizId", "quizTitle", "score", "totalQuestions", "completedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Stores user profiles with their progress and settings"
+    },
+    "/users/{userId}/chatMessages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "AI Tutor chat history logs"
+    },
+    "/users/{userId}/quizAttempts/{attemptId}": {
+      "schema": "QuizAttempt",
+      "description": "STEM CBSE mock quiz attempt logs"
+    }
+  }
+}

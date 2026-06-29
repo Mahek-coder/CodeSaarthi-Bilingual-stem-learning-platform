@@ -1,0 +1,6 @@
+{
+  "name": "CodeSaarthi",
+  "description": "A bilingual AI-powered STEM learning platform helping students learn programming and STEM in English and Indian regional languages.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

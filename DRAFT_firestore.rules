@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 3. Primitive Helpers
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+
+    // Validation Blueprint for User profiles
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() <= 128 && data.uid == request.auth.uid
+        && data.fullName is string && data.fullName.size() <= 200
+        && data.email is string && data.email.size() <= 200
+        && data.role is string && (data.role == 'student' || data.role == 'teacher')
+        && data.preferredLang is string && (data.preferredLang == 'en' || data.preferredLang == 'hi' || data.preferredLang == 'mr' || data.preferredLang == 'te')
+        && data.grade is string && data.grade.size() <= 100
+        && data.xpPoints is int
+        && data.dailyStreak is int
+        && data.completedLessons is int;
+    }
+
+    // Validation Blueprint for ChatMessages
+    function isValidChatMessage(data) {
+      return data.sender is string && (data.sender == 'user' || data.sender == 'ai')
+        && data.text is string && data.text.size() <= 10000;
+    }
+
+    // Validation Blueprint for QuizAttempts
+    function isValidQuizAttempt(data) {
+      return data.quizId is string && data.quizId.size() <= 128
+        && data.quizTitle is string && data.quizTitle.size() <= 200
+        && data.score is int
+        && data.totalQuestions is int;
+    }
+
+    // 4. Matches & Gates
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) 
+        && isValidId(userId)
+        && isValidUser(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+        
+      allow update: if isOwner(userId)
+        && isValidUser(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time;
+
+      match /chatMessages/{messageId} {
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && isValidId(messageId)
+          && isValidChatMessage(incoming())
+          && incoming().timestamp == request.time;
+      }
+
+      match /quizAttempts/{attemptId} {
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && isValidId(attemptId)
+          && isValidQuizAttempt(incoming())
+          && incoming().completedAt == request.time;
+      }
+    }
+  }
+}
